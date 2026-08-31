@@ -1512,7 +1512,7 @@ Toggles.RemoveDrones:OnChanged(function(Value)
 	-- Находим модуль дронов (как в RemoveSurge)
 	if not Modules.Drone and ClientModules and ClientModules.EntityModules then
 		for _, Module in pairs(ClientModules.EntityModules:GetChildren()) do
-			if Module.Name == "Drone" or Module.Name == "Drones" then
+			if Module.Name == "Drones" then
 				Modules.Drone = Module
 				break
 			end
@@ -1521,7 +1521,7 @@ Toggles.RemoveDrones:OnChanged(function(Value)
 
 	-- Переименовываем модуль (как в RemoveSurge)
 	if Modules.Drone then
-		Modules.Drone.Name = Value and "Drone_Disabled" or "Drone"
+		Modules.Drone.Name = Value and "Drones_Disabled" or "Drones"
 	end
 
 	-- Удаляем уже существующих дронов (один раз, без цикла)
@@ -1533,8 +1533,6 @@ Toggles.RemoveDrones:OnChanged(function(Value)
 		end
 	end
 end)
-
-local Modules = {}
 
 Toggles.RemoveScreech:OnChanged(function(Value)
 	Modules.Screech.Name = Value and "Screech_Disabled" or "Screech"
