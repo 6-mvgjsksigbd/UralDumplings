@@ -1592,19 +1592,6 @@ Toggles.RemoveInteractingSounds:OnChanged(function(Value)
 	Globals.MainUI.Initiator.Main_Game.Reminder.Caption.Volume = Value and 0 or 0.1
 end)
 
-Groupboxes.Visuals_LeftTab = Tabs.Visuals:AddLeftTabbox("Camera / Effects")
-Groupboxes.Visuals_Camera = Groupboxes.Visuals_LeftTab:AddTab("Camera")
-Groupboxes.Visuals_Camera:AddToggle("AmbientToggle", { Text = "Ambient", Default = false, Tooltip = "Changes the lighting color to the specified value." })
-Groupboxes.Visuals_Camera:AddSlider("FieldOfView", { Text = "Field of View", Min = 1, Max = 120, Default = 70, Rounding = 0 })
-Groupboxes.Visuals_Camera:AddDivider()
-Groupboxes.Visuals_Camera:AddToggle("RemoveCameraShake", {
-	Text = "Remove Camera Shake", Default = false, Tooltip = "Prevents the camera from shaking.",
-	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
-})
-Groupboxes.Visuals_Camera:AddToggle("RemoveCameraBobbing", {
-	Text = "Remove Camera Bobbing", Default = false, Tooltip = "Prevents the camera from bobbing when moving.",
-	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
-})
 
 Groupboxes.Visuals_LeftTab = Tabs.Visuals:AddLeftTabbox("Camera / Effects")
 Groupboxes.Visuals_Camera = Groupboxes.Visuals_LeftTab:AddTab("Camera")
