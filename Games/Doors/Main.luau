@@ -1273,6 +1273,7 @@ Groupboxes.Exploits_Bypass:AddToggle("BypassSeekingWall",    { Text = "Bypass Se
 Groupboxes.Exploits_Bypass:AddToggle("BypassSnare",          { Text = "Bypass Snare",            Default = false, Tooltip = "Prevents 'Snare' from trapping you." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassBanana",         { Text = "Bypass Banana",           Default = false, Tooltip = "Prevents 'Banana Peel' from slipping you up (sometimes doesn't work)." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassJeff",           { Text = "Bypass Jeff",             Default = false, Tooltip = "Prevents 'Jeff the Killer' from stabbing you (sometimes doesn't work)." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassDrones",         { Text = "Bypass Drones",           Default = false, Tooltip = "Prevents 'Drone' from hurting you." })
 
 Toggles.BypassGiggle:OnChanged(function(Value)
 	for _, Object in Objects.Entities do
@@ -1448,6 +1449,16 @@ Toggles.PositionSpoof:AddKeyPicker("PositionSpoof", {
 Toggles.CrouchSpoof:OnChanged(function(Value)
 	if RemotesFolder:FindFirstChild("Crouch") then
 		RemotesFolder.Crouch:FireServer(Value and true or Functions.IsCrouching(), true)
+	end
+Toggles.BypassDrones:OnChanged(function(Value)
+	for _, Object in Objects.Entities do
+		if Object.Name == "Drone" or Object.Name == "Drones" then
+			for _, Part in Object:GetDescendants() do
+				if Part:IsA("BasePart") and Part.Name == "WalkedInto" then
+					Part.CanTouch = not Value
+				end
+			end
+		end
 	end
 end)
 
