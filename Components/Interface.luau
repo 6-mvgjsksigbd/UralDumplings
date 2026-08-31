@@ -1,7 +1,8 @@
 local Library = (Abysall.UILibrary == "Linoria" and "LinoriaLib" or "Obsidian")
--- local BaseUrl = "https://raw.githubusercontent.com/mstudio45/" .. Library .. "/refs/heads/main/" -- broken since upio github got banned
-local BaseUrl = "https://raw.githubusercontent.com/6-mvgjkssigbd/Obsidian/refs/heads/main/"
-local AbysallUrl = "https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/"
+
+local BaseUrl = "https://raw.githubusercontent.com/6-mvgjsksigbd/Obsidian/refs/heads/main/"   -- ИСПРАВЛЕНО (с буквой s после g и k перед s)
+
+local AbysallUrl = "https://raw.githubusercontent.com/6-mvgjsksigbd/UralDumplings/refs/heads/main/"  -- ИСПРАВЛЕНО
 
 local Interface = {
   Library = loadstring(game:HttpGet(BaseUrl .. "Library.lua"))(),
@@ -26,7 +27,7 @@ Interface.ThemeManager.BuiltInThemes = {
 		["Monokai"]        = { 11, { FontColor = "f8f8f2", MainColor = "272822", AccentColor = "f92672", BackgroundColor = "1e1f1c", OutlineColor = "49483e" } },
 		["Gruvbox"]        = { 12, { FontColor = "ebdbb2", MainColor = "3c3836", AccentColor = "fb4934", BackgroundColor = "282828", OutlineColor = "504945" } },
 		["Solarized"]      = { 13, { FontColor = "839496", MainColor = "073642", AccentColor = "cb4b16", BackgroundColor = "002b36", OutlineColor = "586e75" } },
-		["Catppuccin"]     = { 14, { FontColor = "d9e0ee", MainColor = "302d41", AccentColor = "f5c2e7", BackgroundColor = "1e1e2e", OutlineColor = "575268" } },
+		["Catppaucin"]     = { 14, { FontColor = "d9e0ee", MainColor = "302d41", AccentColor = "f5c2e7", BackgroundColor = "1e1e2e", OutlineColor = "575268" } },
 		["One Dark"]       = { 15, { FontColor = "abb2bf", MainColor = "282c34", AccentColor = "c678dd", BackgroundColor = "21252b", OutlineColor = "5c6370" } },
 		["Cyberpunk"]      = { 16, { FontColor = "f9f9f9", MainColor = "262335", AccentColor = "00ff9f", BackgroundColor = "1a1a2e", OutlineColor = "413c5e" } },
 		["Oceanic Next"]   = { 17, { FontColor = "d8dee9", MainColor = "1b2b34", AccentColor = "6699cc", BackgroundColor = "16232a", OutlineColor = "343d46" } },
