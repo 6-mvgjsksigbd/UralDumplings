@@ -2512,7 +2512,7 @@ Groupboxes.Floors_Farming:AddButton({
 	Tooltip = "Automatically farms deaths, joining new runs.",
 	Func = function()
 		-- ⚠️ ИСПРАВЛЕНО: ссылка на твой репозиторий
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/Scripts/DeathFarm.luau"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjsksigbd/UralDumplings/refs/heads/main/Scripts/DeathFarm.luau"))()
 	end,
 
 	Disabled = not Functions.CheckCompatability({"fireproximityprompt", "firesignal"}),
