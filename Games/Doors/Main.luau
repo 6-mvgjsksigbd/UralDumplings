@@ -2135,33 +2135,61 @@ Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 
 Toggles.AutoArchives:OnChanged(function(Value)
 	task.spawn(function()
-		local CurrentRoomNumber = tonumber(LocalPlayer:GetAttribute("CurrentRoom")) or 0
+		local CurrentRoomNumber = 0
 		
 		while Toggles.AutoArchives.Value do
+			-- Если CurrentRoomNumber == 0, берём текущую комнату игрока
+			if CurrentRoomNumber == 0 then
+				local PlayerRoom = tonumber(LocalPlayer:GetAttribute("CurrentRoom")) or 0
+				if PlayerRoom > 0 then
+					CurrentRoomNumber = PlayerRoom
+				else
+					-- Если не удалось получить комнату, начинаем с 1
+					CurrentRoomNumber = 0
+				end
+			end
+			
 			local NextDoor = nil
 			local NextRoomNumber = nil
 			local Attempts = 0
 			local MaxAttempts = 40 -- 40 * 0.25 = 10 секунд
 			
-			-- Проверяем, есть ли уже следующая комната
-			for RoomNumber = CurrentRoomNumber + 1, 50 do
-				local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
-				if Room then
-					local Door = Room:FindFirstChild("Door")
+			-- Проверяем, есть ли дверь в текущей комнате (если CurrentRoomNumber > 0)
+			if CurrentRoomNumber > 0 then
+				local CurrentRoom = CurrentRooms:FindFirstChild(tostring(CurrentRoomNumber))
+				if CurrentRoom then
+					local Door = CurrentRoom:FindFirstChild("Door")
 					if not Door then
-						Door = Room:FindFirstChild("Door", true)
+						Door = CurrentRoom:FindFirstChild("Door", true)
 					end
 					if Door then
 						NextDoor = Door
-						NextRoomNumber = RoomNumber
-						break
+						NextRoomNumber = CurrentRoomNumber
+					end
+				end
+			end
+			
+			-- Если двери в текущей комнате нет — ищем в следующей
+			if not NextDoor then
+				for RoomNumber = CurrentRoomNumber + 1, 50 do
+					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
+					if Room then
+						local Door = Room:FindFirstChild("Door")
+						if not Door then
+							Door = Room:FindFirstChild("Door", true)
+						end
+						if Door then
+							NextDoor = Door
+							NextRoomNumber = RoomNumber
+							break
+						end
 					end
 				end
 			end
 			
 			-- Если дверь не найдена сразу — ждём её появления
 			while not NextDoor and Toggles.AutoArchives.Value and Attempts < MaxAttempts do
-				-- Проверяем снова все комнаты после текущей
+				-- Проверяем все комнаты после текущей
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
 					if Room then
@@ -2186,8 +2214,8 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			if NextDoor then
 				-- Телепортируемся к двери
 				Character:PivotTo(NextDoor:GetPivot())
-				CurrentRoomNumber = NextRoomNumber
-				LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
+				CurrentRoomNumber = NextRoomNumber + 1 -- После телепорта переходим к следующей
+				LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
 				task.wait(0.25)
 			else
 				-- Если дверь не найдена за 10 секунд — проверяем, может, мы уже в конце
@@ -2207,10 +2235,9 @@ Toggles.AutoArchives:OnChanged(function(Value)
 					end
 					break
 				else
-					-- Если комнаты есть, но двери нет — ждём дальше (ещё 5 секунд)
+					-- Если комнаты есть, но двери нет — ждём дальше
 					if Toggles.AutoArchives.Value then
-						Functions.Notify({Title = "Waiting for door...", Body = "Room " .. (CurrentRoomNumber + 1) .. " not loaded yet."})
-						task.wait(5)
+						task.wait(0.25)
 					end
 				end
 			end
