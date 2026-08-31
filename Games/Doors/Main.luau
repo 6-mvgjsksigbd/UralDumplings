@@ -3593,10 +3593,11 @@ Functions.HandleObject = function(Object)
 		Object.Name = "_EyestalkEndCutscene"
 	elseif Name == "DuckBoard" then
 		table.insert(Objects.SeekDuckBoards, Object)
-	elseif HidingSpotLabels[Name] then
-		if Toggles.HidingSpotESPToggle.Value then Functions.AddESP({ Object = Object, Text = HidingSpotLabels[Name], Color = Options.HidingSpotESPColor.Value }, true) end
-		Functions.HandleHidingTransparency(Object)
-		table.insert(Objects.HidingSpots, Object)
+	elseif string.match(Name, "^HidingSpot") or HidingSpotLabels[Name] then
+	local Label = HidingSpotLabels[Name] or "Hiding Spot"
+	if Toggles.HidingSpotESPToggle.Value then Functions.AddESP({ Object = Object, Text = Label, Color = Options.HidingSpotESPColor.Value }, true) end
+	Functions.HandleHidingTransparency(Object)
+	table.insert(Objects.HidingSpots, Object)
 	elseif Name == "Lava" then
 		if Toggles.BypassKillbricks.Value then Object.CanTouch = false end
 		table.insert(Objects.Obstructions, Object)
