@@ -2,6 +2,9 @@ if Abysall then
     return 
 end
 
+-- Используем уникальное имя для твоего скрипта
+local ScriptName = "UralDumplings"
+
 getgenv().Abysall = {
     Legit = true
 }
@@ -33,16 +36,17 @@ local Services = setmetatable({}, {
     end
 })
 
+-- ⚠️ ИЗМЕНЕНО: используем папку UralDumplings вместо Abysall
 if Abysall.Environment.writefile and Abysall.Environment.readfile then
-    if not Abysall.Environment.isfile("Abysall/UserData.json") then
+    if not Abysall.Environment.isfile(ScriptName .. "/UserData.json") then
         local Data = {
             TotalExecutions = 0,
             UILibrary = "Obsidian"
         }
-        Abysall.Environment.writefile("Abysall/UserData.json", Services.HttpService:JSONEncode(Data))
+        Abysall.Environment.writefile(ScriptName .. "/UserData.json", Services.HttpService:JSONEncode(Data))
     end
 
-    local UserData = Abysall.Environment.readfile("Abysall/UserData.json")
+    local UserData = Abysall.Environment.readfile(ScriptName .. "/UserData.json")
     local Decoded = Services.HttpService:JSONDecode(UserData)
     if not Decoded.TotalExecutions then
         Decoded.TotalExecutions = 0    
@@ -57,7 +61,7 @@ if Abysall.Environment.writefile and Abysall.Environment.readfile then
     Abysall.TotalExecutions = Decoded.TotalExecutions
     Abysall.UILibrary = Decoded.UILibrary
 
-    Abysall.Environment.writefile("Abysall/UserData.json", Services.HttpService:JSONEncode(Decoded))
+    Abysall.Environment.writefile(ScriptName .. "/UserData.json", Services.HttpService:JSONEncode(Decoded))
 end
 
 Abysall.Interface = loadstring(game:HttpGet(BaseUrl .. "Components/Interface.luau"))()
