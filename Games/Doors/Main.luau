@@ -1479,7 +1479,7 @@ Toggles.PositionSpoof:OnChanged(function(Value)
 end)
 
 Toggles.PositionSpoof:AddKeyPicker("PositionSpoof", {
-	Text = "Position Spoof", Default = "B", Mode = "Toggle", SyncToggleState = true
+	Text = "Position Spoof", Default = "B", Mode = "Always", SyncToggleState = true
 })
 
 Toggles.CrouchSpoof:OnChanged(function(Value)
