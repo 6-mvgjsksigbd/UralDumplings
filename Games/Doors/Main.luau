@@ -2126,16 +2126,17 @@ Groupboxes.Floors_Automation:AddSlider("AutoSteerMinecartDuckDistance", {
 	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
 })
 Groupboxes.Floors_Automation:AddDivider()
--- ========== AUTO ARCHIVES ==========
+-- ========== AUTO ARCHIVES (с обходом препятствий) ==========
 Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 	Text = "Auto Archives",
 	Default = false,
-	Tooltip = "Teleports you in front of each door from current room to 50 every 0.25 seconds."
+	Tooltip = "Walks to each door from current room to 50 with obstacle avoidance."
 })
 
 Toggles.AutoArchives:OnChanged(function(Value)
 	task.spawn(function()
 		local CurrentRoomNumber = 0
+		local IsMoving = false
 		
 		while Toggles.AutoArchives.Value do
 			-- Если CurrentRoomNumber == 0, берём текущую комнату игрока
@@ -2153,7 +2154,7 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			local Attempts = 0
 			local MaxAttempts = 40 -- 40 * 0.25 = 10 секунд
 			
-			-- Проверяем, есть ли дверь в текущей комнате
+			-- Проверяем дверь в текущей комнате
 			if CurrentRoomNumber > 0 then
 				local CurrentRoom = CurrentRooms:FindFirstChild(tostring(CurrentRoomNumber))
 				if CurrentRoom then
@@ -2168,7 +2169,7 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				end
 			end
 			
-			-- Если двери в текущей комнате нет — ищем в следующей
+			-- Если двери нет — ищем в следующей комнате
 			if not NextDoor then
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
@@ -2186,7 +2187,7 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				end
 			end
 			
-			-- Если дверь не найдена сразу — ждём её появления
+			-- Ждём появления двери
 			while not NextDoor and Toggles.AutoArchives.Value and Attempts < MaxAttempts do
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
@@ -2210,50 +2211,99 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			end
 			
 			if NextDoor then
-				-- Проверяем, существует ли дверь и её родитель
-				if NextDoor and NextDoor:IsA("BasePart") and NextDoor.Parent then
-					local Room = NextDoor.Parent
-					local DoorCFrame = NextDoor.CFrame
+				-- Двигаемся к двери с обходом препятствий
+				if not IsMoving then
+					IsMoving = true
 					
-					-- Пытаемся определить высоту пола
-					local TeleportHeight = DoorCFrame.Position.Y
-					local RootPart = Room:FindFirstChild("HumanoidRootPart")
-					if RootPart and RootPart:IsA("BasePart") then
-						TeleportHeight = RootPart.Position.Y
-					else
-						-- Ищем любую часть в комнате для определения высоты
-						for _, Part in Room:GetChildren() do
-							if Part:IsA("BasePart") and Part.Name ~= "Door" then
-								TeleportHeight = Part.Position.Y
-								break
+					local TargetPosition = NextDoor.Position
+					local RootPart = Character:FindFirstChild("HumanoidRootPart")
+					local Humanoid = Character:FindFirstChild("Humanoid")
+					
+					if RootPart and Humanoid then
+						-- Создаём путь
+						local Path = Services.PathfindingService:CreatePath({
+							AgentCanJump = true,
+							AgentCanClimb = false,
+							WaypointSpacing = 3,
+							AgentRadius = 2,
+							AgentHeight = 5,
+							Costs = {
+								StuckPart = 8,
+								Water = 5,
+								Lava = 10
+							}
+						})
+						
+						-- Вычисляем путь
+						local Success, Error = pcall(function()
+							Path:ComputeAsync(RootPart.Position, TargetPosition)
+						end)
+						
+						if Success and Path.Status == Enum.PathStatus.Success then
+							local Waypoints = Path:GetWaypoints()
+							
+							-- Проходим по точкам пути
+							for _, Waypoint in ipairs(Waypoints) do
+								if not Toggles.AutoArchives.Value then
+									break
+								end
+								
+								-- Двигаемся к точке
+								Humanoid:MoveTo(Waypoint.Position)
+								
+								-- Ждём, пока дойдём до точки (или застрянем)
+								local StartTime = tick()
+								local Timeout = 5 -- 5 секунд на точку
+								local LastPosition = RootPart.Position
+								local StuckCheck = 0
+								
+								while Toggles.AutoArchives.Value do
+									local Distance = (RootPart.Position - Waypoint.Position).Magnitude
+									
+									if Distance < 4 then
+										break -- Дошли до точки
+									end
+									
+									-- Проверка на застревание
+									if tick() - StartTime > Timeout then
+										break -- Таймаут
+									end
+									
+									-- Проверка на застревание (если не двигаемся)
+									if StuckCheck % 10 == 0 then
+										local CurrentPos = RootPart.Position
+										if (CurrentPos - LastPosition).Magnitude < 0.5 then
+											-- Застряли, пробуем обойти
+											Humanoid:MoveTo(Waypoint.Position + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3)))
+										end
+										LastPosition = CurrentPos
+									end
+									
+									StuckCheck = StuckCheck + 1
+									task.wait(0.1)
+								end
 							end
+							
+							-- Финиш: обновляем комнату
+							CurrentRoomNumber = NextRoomNumber + 1
+							LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
+						else
+							-- Если путь не найден — телепортируемся как запасной вариант
+							Functions.Notify({Title = "Auto Archives", Body = "Path not found, teleporting to door."})
+							pcall(function()
+								Character:PivotTo(NextDoor.CFrame * CFrame.new(0, 0, -3))
+							end)
+							CurrentRoomNumber = NextRoomNumber + 1
+							LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
 						end
 					end
 					
-					-- Телепортируемся перед дверью
-					local TeleportPosition = CFrame.new(
-						DoorCFrame.Position.X,
-						TeleportHeight + 2,
-						DoorCFrame.Position.Z - 5
-					)
-					
-					local Success, Error = pcall(function()
-						Character:PivotTo(TeleportPosition)
-					end)
-					
-					if Success then
-						CurrentRoomNumber = NextRoomNumber + 1
-						LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
-					else
-						Functions.Notify({Title = "Auto Archives error!", Body = "Failed to teleport: " .. tostring(Error)})
-					end
-				else
-					Functions.Notify({Title = "Auto Archives error!", Body = "Door is invalid."})
+					IsMoving = false
 				end
 				
-				task.wait(0.25)
+				task.wait(0.1)
 			else
-				-- Если дверь не найдена за 10 секунд — проверяем, есть ли комнаты дальше
+				-- Если дверь не найдена
 				local FoundAnyRoom = false
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					if CurrentRooms:FindFirstChild(tostring(RoomNumber)) then
@@ -2269,15 +2319,13 @@ Toggles.AutoArchives:OnChanged(function(Value)
 					end
 					break
 				else
-					-- Комнаты есть, но двери нет — ждём
-					if Toggles.AutoArchives.Value then
-						task.wait(0.25)
-					end
+					task.wait(0.25)
 				end
 			end
 		end
 		
 		CurrentRoomNumber = 0
+		IsMoving = false
 	end)
 end)
 
