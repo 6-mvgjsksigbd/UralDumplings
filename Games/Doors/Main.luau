@@ -2126,7 +2126,80 @@ Groupboxes.Floors_Automation:AddSlider("AutoSteerMinecartDuckDistance", {
 	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
 })
 Groupboxes.Floors_Automation:AddDivider()
--- ========== AUTO ARCHIVES (с обходом препятствий) ==========
+-- ========== AUTO ARCHIVES (как Auto Rooms) ==========
+Functions.AutoArchives = {}
+Functions.AutoArchives.Active = false
+
+Functions.AutoArchives.GetNextDoor = function(CurrentRoomNumber)
+	for RoomNumber = CurrentRoomNumber + 1, 50 do
+		local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
+		if Room then
+			local Door = Room:FindFirstChild("Door")
+			if not Door then
+				Door = Room:FindFirstChild("Door", true)
+			end
+			if Door and Door:IsA("BasePart") then
+				return Door, RoomNumber
+			end
+		end
+	end
+	return nil, nil
+end
+
+Functions.AutoArchives.WalkToDoor = function(Door)
+	if not Door or not Character or not Humanoid or not RootPart then
+		return false
+	end
+	
+	local Path = Services.PathfindingService:CreatePath({
+		AgentCanJump = true,
+		AgentCanClimb = false,
+		WaypointSpacing = 3,
+		AgentRadius = 2,
+		AgentHeight = 5,
+		Costs = {
+			StuckPart = 8,
+		}
+	})
+	
+	local TargetPosition = Door.Position + Vector3.new(0, 0, 0)
+	
+	local Success, Error = pcall(function()
+		Path:ComputeAsync(RootPart.Position, TargetPosition)
+	end)
+	
+	if not Success or Path.Status ~= Enum.PathStatus.Success then
+		return false
+	end
+	
+	local Waypoints = Path:GetWaypoints()
+	
+	for _, Waypoint in ipairs(Waypoints) do
+		if not Toggles.AutoArchives.Value then
+			break
+		end
+		
+		Humanoid:MoveTo(Waypoint.Position)
+		
+		local StartTime = tick()
+		local Timeout = 3
+		
+		while Toggles.AutoArchives.Value do
+			local Distance = (RootPart.Position - Waypoint.Position).Magnitude
+			if Distance < 4 then
+				break
+			end
+			if tick() - StartTime > Timeout then
+				break
+			end
+			task.wait(0.1)
+		end
+	end
+	
+	return true
+end
+
+-- Тоггл для Auto Archives
 Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 	Text = "Auto Archives",
 	Default = false,
@@ -2135,175 +2208,54 @@ Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 
 Toggles.AutoArchives:OnChanged(function(Value)
 	task.spawn(function()
-		local CurrentRoomNumber = 0
-		local IsMoving = false
+		if Value then
+			Functions.AutoArchives.Active = true
+		else
+			Functions.AutoArchives.Active = false
+			return
+		end
 		
-		while Toggles.AutoArchives.Value do
+		local CurrentRoomNumber = tonumber(LocalPlayer:GetAttribute("CurrentRoom")) or 0
+		
+		while Functions.AutoArchives.Active and Toggles.AutoArchives.Value do
 			-- Если CurrentRoomNumber == 0, берём текущую комнату игрока
 			if CurrentRoomNumber == 0 then
 				local PlayerRoom = tonumber(LocalPlayer:GetAttribute("CurrentRoom")) or 0
 				if PlayerRoom > 0 then
 					CurrentRoomNumber = PlayerRoom
-				else
-					CurrentRoomNumber = 0
 				end
 			end
 			
-			local NextDoor = nil
-			local NextRoomNumber = nil
+			-- Ищем следующую дверь
+			local NextDoor, NextRoomNumber = Functions.AutoArchives.GetNextDoor(CurrentRoomNumber)
+			
+			-- Если дверь не найдена, ждём её появления
 			local Attempts = 0
-			local MaxAttempts = 40 -- 40 * 0.25 = 10 секунд
-			
-			-- Проверяем дверь в текущей комнате
-			if CurrentRoomNumber > 0 then
-				local CurrentRoom = CurrentRooms:FindFirstChild(tostring(CurrentRoomNumber))
-				if CurrentRoom then
-					local Door = CurrentRoom:FindFirstChild("Door")
-					if not Door then
-						Door = CurrentRoom:FindFirstChild("Door", true)
-					end
-					if Door and Door:IsA("BasePart") then
-						NextDoor = Door
-						NextRoomNumber = CurrentRoomNumber
-					end
-				end
-			end
-			
-			-- Если двери нет — ищем в следующей комнате
-			if not NextDoor then
-				for RoomNumber = CurrentRoomNumber + 1, 50 do
-					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
-					if Room then
-						local Door = Room:FindFirstChild("Door")
-						if not Door then
-							Door = Room:FindFirstChild("Door", true)
-						end
-						if Door and Door:IsA("BasePart") then
-							NextDoor = Door
-							NextRoomNumber = RoomNumber
-							break
-						end
-					end
-				end
-			end
-			
-			-- Ждём появления двери
-			while not NextDoor and Toggles.AutoArchives.Value and Attempts < MaxAttempts do
-				for RoomNumber = CurrentRoomNumber + 1, 50 do
-					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
-					if Room then
-						local Door = Room:FindFirstChild("Door")
-						if not Door then
-							Door = Room:FindFirstChild("Door", true)
-						end
-						if Door and Door:IsA("BasePart") then
-							NextDoor = Door
-							NextRoomNumber = RoomNumber
-							break
-						end
-					end
-				end
-				
-				if not NextDoor then
-					Attempts = Attempts + 1
-					task.wait(0.25)
-				end
+			while not NextDoor and Functions.AutoArchives.Active and Attempts < 40 do
+				NextDoor, NextRoomNumber = Functions.AutoArchives.GetNextDoor(CurrentRoomNumber)
+				Attempts = Attempts + 1
+				task.wait(0.25)
 			end
 			
 			if NextDoor then
-				-- Двигаемся к двери с обходом препятствий
-				if not IsMoving then
-					IsMoving = true
-					
-					local TargetPosition = NextDoor.Position
-					local RootPart = Character:FindFirstChild("HumanoidRootPart")
-					local Humanoid = Character:FindFirstChild("Humanoid")
-					
-					if RootPart and Humanoid then
-						-- Создаём путь
-						local Path = Services.PathfindingService:CreatePath({
-							AgentCanJump = true,
-							AgentCanClimb = false,
-							WaypointSpacing = 3,
-							AgentRadius = 2,
-							AgentHeight = 5,
-							Costs = {
-								StuckPart = 8,
-								Water = 5,
-								Lava = 10
-							}
-						})
-						
-						-- Вычисляем путь
-						local Success, Error = pcall(function()
-							Path:ComputeAsync(RootPart.Position, TargetPosition)
-						end)
-						
-						if Success and Path.Status == Enum.PathStatus.Success then
-							local Waypoints = Path:GetWaypoints()
-							
-							-- Проходим по точкам пути
-							for _, Waypoint in ipairs(Waypoints) do
-								if not Toggles.AutoArchives.Value then
-									break
-								end
-								
-								-- Двигаемся к точке
-								Humanoid:MoveTo(Waypoint.Position)
-								
-								-- Ждём, пока дойдём до точки (или застрянем)
-								local StartTime = tick()
-								local Timeout = 5 -- 5 секунд на точку
-								local LastPosition = RootPart.Position
-								local StuckCheck = 0
-								
-								while Toggles.AutoArchives.Value do
-									local Distance = (RootPart.Position - Waypoint.Position).Magnitude
-									
-									if Distance < 4 then
-										break -- Дошли до точки
-									end
-									
-									-- Проверка на застревание
-									if tick() - StartTime > Timeout then
-										break -- Таймаут
-									end
-									
-									-- Проверка на застревание (если не двигаемся)
-									if StuckCheck % 10 == 0 then
-										local CurrentPos = RootPart.Position
-										if (CurrentPos - LastPosition).Magnitude < 0.5 then
-											-- Застряли, пробуем обойти
-											Humanoid:MoveTo(Waypoint.Position + Vector3.new(math.random(-3, 3), 0, math.random(-3, 3)))
-										end
-										LastPosition = CurrentPos
-									end
-									
-									StuckCheck = StuckCheck + 1
-									task.wait(0.1)
-								end
-							end
-							
-							-- Финиш: обновляем комнату
-							CurrentRoomNumber = NextRoomNumber + 1
-							LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
-						else
-							-- Если путь не найден — телепортируемся как запасной вариант
-							Functions.Notify({Title = "Auto Archives", Body = "Path not found, teleporting to door."})
-							pcall(function()
-								Character:PivotTo(NextDoor.CFrame * CFrame.new(0, 0, -3))
-							end)
-							CurrentRoomNumber = NextRoomNumber + 1
-							LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
-						end
-					end
-					
-					IsMoving = false
+				-- Идём к двери
+				local Walked = Functions.AutoArchives.WalkToDoor(NextDoor)
+				
+				if Walked then
+					CurrentRoomNumber = NextRoomNumber + 1
+					LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
+				else
+					-- Если не удалось дойти — телепортируемся
+					pcall(function()
+						Character:PivotTo(NextDoor.CFrame * CFrame.new(0, 0, -5))
+					end)
+					CurrentRoomNumber = NextRoomNumber + 1
+					LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
 				end
 				
-				task.wait(0.1)
+				task.wait(0.25)
 			else
-				-- Если дверь не найдена
+				-- Если дверь не найдена за 10 секунд — проверяем, есть ли комнаты дальше
 				local FoundAnyRoom = false
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					if CurrentRooms:FindFirstChild(tostring(RoomNumber)) then
@@ -2324,10 +2276,20 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			end
 		end
 		
-		CurrentRoomNumber = 0
-		IsMoving = false
+		Functions.AutoArchives.Active = false
 	end)
 end)
+
+-- Отключаем старые соединения RoomsAutoWalk, если они остались
+if Connections.RoomsAutoWalkHandler then
+	Connections.RoomsAutoWalkHandler:Disconnect()
+	Connections.RoomsAutoWalkHandler = nil
+end
+
+if Connections.RoomsHandler then
+	Connections.RoomsHandler:Disconnect()
+	Connections.RoomsHandler = nil
+end
 
 Groupboxes.Floors_Completion = Tabs.Floors:AddRightGroupbox("Completion")
 Groupboxes.Floors_Completion:AddButton({
