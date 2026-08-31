@@ -10,7 +10,7 @@ local GameList = {
 }
 
 -- ABYSSAL ZOV EDITION
-local BaseUrl = "https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/"
+local BaseUrl = "https://raw.githubusercontent.com/6-mvgjsksigbd/UralDumplings/refs/heads/main/"
 
 getgenv().Abysall = {
     Environment = loadstring(game:HttpGet(BaseUrl .. "Components/Environment.luau"))(),
