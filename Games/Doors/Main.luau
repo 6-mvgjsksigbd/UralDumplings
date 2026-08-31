@@ -1431,6 +1431,7 @@ Groupboxes.Exploits_BypassRight:AddToggle("PositionSpoof", {
 Groupboxes.Exploits_BypassRight:AddToggle("CrouchSpoof", {
 	Text = "Crouch Spoof", Default = false, Tooltip = "Makes the game think you are always crouching."
 })
+
 Toggles.PositionSpoof:OnChanged(function(Value)
 	if Floor ~= "Fools" and Floor ~= "OldHotel" then
 		if Value then
@@ -1443,13 +1444,17 @@ Toggles.PositionSpoof:OnChanged(function(Value)
 		end
 	end
 end)
+
 Toggles.PositionSpoof:AddKeyPicker("PositionSpoof", {
 	Text = "Position Spoof", Default = "B", Mode = "Toggle", SyncToggleState = true
 })
+
 Toggles.CrouchSpoof:OnChanged(function(Value)
 	if RemotesFolder:FindFirstChild("Crouch") then
 		RemotesFolder.Crouch:FireServer(Value and true or Functions.IsCrouching(), true)
 	end
+end)
+
 Toggles.BypassDrones:OnChanged(function(Value)
 	for _, Object in Objects.Entities do
 		if Object.Name == "Drone" or Object.Name == "Drones" then
