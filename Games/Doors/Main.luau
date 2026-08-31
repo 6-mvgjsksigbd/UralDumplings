@@ -1508,51 +1508,32 @@ Toggles.NoSurgeDamage:OnChanged(function(Value)
 	end
 end)
 
--- Добавь это в блок Modules (вместе с другими модулями)
-Modules.Drone = nil
-
 Toggles.RemoveDrones:OnChanged(function(Value)
-	if Value then
-		-- Отключаем модули дронов, если они уже загружены
-		if ClientModules and ClientModules.EntityModules then
-			for _, Module in pairs(ClientModules.EntityModules:GetChildren()) do
-				if Module.Name == "Drone" or Module.Name == "Drones" then
-					Module.Name = Module.Name .. "_Disabled"
-					Modules.Drone = Module
-				end
+	-- Находим модуль дронов (как в RemoveSurge)
+	if not Modules.Drone and ClientModules and ClientModules.EntityModules then
+		for _, Module in pairs(ClientModules.EntityModules:GetChildren()) do
+			if Module.Name == "Drone" or Module.Name == "Drones" then
+				Modules.Drone = Module
+				break
 			end
 		end
-		
-		-- Удаляем уже существующих дронов (один раз)
+	end
+
+	-- Переименовываем модуль (как в RemoveSurge)
+	if Modules.Drone then
+		Modules.Drone.Name = Value and "Drone_Disabled" or "Drone"
+	end
+
+	-- Удаляем уже существующих дронов (один раз, без цикла)
+	if Value then
 		for _, Object in ipairs(Services.Workspace:GetDescendants()) do
 			if Object.Name == "Drone" or Object.Name == "Drones" then
 				Object:Destroy()
 			end
 		end
-		
-		-- Следим за новыми дронами через ChildAdded (без постоянного цикла)
-		if not _G.DroneRemoveConnection then
-			_G.DroneRemoveConnection = Services.Workspace.DescendantAdded:Connect(function(Object)
-				if Toggles.RemoveDrones.Value then
-					if Object.Name == "Drone" or Object.Name == "Drones" then
-						Object:Destroy()
-					end
-				end
-			end)
-		end
-	else
-		-- Восстанавливаем модули при выключении
-		if Modules.Drone then
-			Modules.Drone.Name = string.gsub(Modules.Drone.Name, "_Disabled", "")
-			Modules.Drone = nil
-		end
-		
-		if _G.DroneRemoveConnection then
-			_G.DroneRemoveConnection:Disconnect()
-			_G.DroneRemoveConnection = nil
-		end
 	end
 end)
+
 local Modules = {}
 
 Toggles.RemoveScreech:OnChanged(function(Value)
@@ -1615,6 +1596,23 @@ Groupboxes.Visuals_Camera:AddToggle("RemoveCameraBobbing", {
 	Text = "Remove Camera Bobbing", Default = false, Tooltip = "Prevents the camera from bobbing when moving.",
 	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
 })
+Groupboxes.Visuals_Camera:AddToggle("RemoveCutscenes", { Text = "Remove Cutscenes", Default = false, Tooltip = "Removes all non-necessary cutscenes." })
+Groupboxes.Visuals_Camera:AddToggle("RemoveCameraFog", { Text = "Remove Fog", Default = false, Tooltip = "Removes all fog effects from the camera." })
+Groupboxes.Visuals_Camera:AddDivider()
+Groupboxes.Visuals_Camera:AddToggle("ThirdPersonToggle", { Text = "Third Person", Default = false, Tooltip = "Zooms out your camera, allowing you to see your character from behind." })
+Toggles.ThirdPersonToggle:AddKeyPicker("ThirdPersonKeybind", { Text = "Third Person", Default = "T", Mode = "Toggle", SyncToggleState = true })
+Groupboxes.Visuals_Camera:AddSlider("ThirdPersonOffsetX", { Text = "X Offset", Min = -10, Max = 10, Default = 1.5, Rounding = 1, Compact = true })
+Groupboxes.Visuals_Camera:AddSlider("ThirdPersonOffsetY", { Text = "Y Offset", Min = -10, Max = 10, Default = 1,   Rounding = 1, Compact = true })
+Groupboxes.Visuals_Camera:AddSlider("ThirdPersonOffsetZ", { Text = "Z Offset", Min = -10, Max = 10, Default = 5,   Rounding = 1, Compact = true })
+Groupboxes.Visuals_Camera:AddToggle("ThirdPersonWallCheck", { Text = "Wall Check", Default = false, Tooltip = "Prevents third person from going through walls." })
+Groupboxes.Visuals_Camera:AddDivider()
+Groupboxes.Visuals_Camera:AddToggle("ViewmodelOffsetToggle", {
+	Text = "Viewmodel Offset", Default = false, Tooltip = "Changes the offset of your viewmodel while holding an item.",
+	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
+})
+Groupboxes.Visuals_Camera:AddSlider("ViewmodelOffsetX", { Text = "X Offset", Min = -10, Max = 10, Default = 0, Rounding = 1, Compact = true, Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage })
+Groupboxes.Visuals_Camera:AddSlider("ViewmodelOffsetY", { Text = "Y Offset", Min = -10, Max = 10, Default = 0, Rounding = 1, Compact = true, Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage })
+Groupboxes.Visuals_Camera:AddSlider("ViewmodelOffsetZ", { Text = "Z Offset", Min = -10, Max = 10, Default = 0, Rounding = 1, Compact = true, Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage })
 Groupboxes.Visuals_Camera:AddToggle("RemoveCutscenes", { Text = "Remove Cutscenes", Default = false, Tooltip = "Removes all non-necessary cutscenes." })
 Groupboxes.Visuals_Camera:AddToggle("RemoveCameraFog", { Text = "Remove Fog", Default = false, Tooltip = "Removes all fog effects from the camera." })
 Groupboxes.Visuals_Camera:AddDivider()
