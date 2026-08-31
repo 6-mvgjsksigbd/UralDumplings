@@ -467,7 +467,7 @@ Globals.DoorsNotify = function(NotifyOptions)
 end
 
 -- ⚠️ ИСПРАВЛЕНО: ссылка на твой репозиторий
-Globals.STX = loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/Components/STX.luau"))()
+Globals.STX = loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjsksigbd/UralDumplings/refs/heads/main/Components/STX.luau"))()
 
 Functions.Notify = function(Settings)
 	local HiddenContainer = GetHiddenContainer()
