@@ -2130,7 +2130,7 @@ Groupboxes.Floors_Automation:AddDivider()
 Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 	Text = "Auto Archives",
 	Default = false,
-	Tooltip = "Teleports you through each door from 1 to 50 every 3 seconds."
+	Tooltip = "Teleports you through each door from 1 to 50 every 0.25 seconds."
 })
 
 Toggles.AutoArchives:OnChanged(function(Value)
@@ -2162,7 +2162,7 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				Character:PivotTo(NextDoor:GetPivot())
 				CurrentRoomNumber = NextRoomNumber
 				LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
-				task.wait(3)
+				task.wait(0.25)
 			else
 				if Toggles.AutoArchives.Value then
 					Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives."})
