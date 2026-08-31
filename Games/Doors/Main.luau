@@ -2524,7 +2524,7 @@ Groupboxes.Floors_Farming:AddButton({
 	Tooltip = "Copies the death farm loadstring to your clipboard.",
 	Func = function()
 		toclipboard([==[
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/Scripts/DeathFarm.luau"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjsksigbd/UralDumplings/refs/heads/main/Scripts/DeathFarm.luau"))()
 		]==])
 		Library:Notify("Loadstring has been copied to your clipboard.")
 	end,
