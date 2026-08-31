@@ -1273,7 +1273,6 @@ Groupboxes.Exploits_Bypass:AddToggle("BypassSeekingWall",    { Text = "Bypass Se
 Groupboxes.Exploits_Bypass:AddToggle("BypassSnare",          { Text = "Bypass Snare",             Default = false, Tooltip = "Prevents 'Snare' from trapping you." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassBanana",         { Text = "Bypass Banana",            Default = false, Tooltip = "Prevents 'Banana Peel' from slipping you up (sometimes doesn't work)." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassJeff",           { Text = "Bypass Jeff",              Default = false, Tooltip = "Prevents 'Jeff the Killer' from stabbing you (sometimes doesn't work)." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassDrones",         { Text = "Bypass Drones",            Default = false, Tooltip = "Prevents 'Drone' from hurting you." })
 
 Toggles.BypassGiggle:OnChanged(function(Value)
 	for _, Object in Objects.Entities do
@@ -1383,39 +1382,6 @@ Toggles.BypassJeff:OnChanged(function(Value)
 		end
 	end
 end)
-Toggles.BypassDrones:OnChanged(function(Value)
-	if Value then
-		local function killWalkedInto(parent)
-			local walkedInto = parent:FindFirstChild("WalkedInto")
-			if walkedInto then
-				walkedInto:Destroy()
-			end
-		end
-
-		-- Обрабатываем всё, что уже есть в памяти
-		for _, obj in ipairs(workspace:GetDescendants()) do
-			if obj.Name == "Drones" or obj.Name == "Drone" then
-				killWalkedInto(obj)
-			end
-		end
-
-		-- Следим за появлением абсолютно каждого нового элемента в игре в реальном времени
-		_G.DroneBypassConnection = workspace.DescendantAdded:Connect(function(child)
-			if Toggles.BypassDrones.Value then
-				if child.Name == "WalkedInto" then
-					child:Destroy()
-				elseif child.Name == "Drones" or child.Name == "Drone" then
-					killWalkedInto(child)
-				end
-			end
-		end)
-	else
-		if _G.DroneBypassConnection then
-			_G.DroneBypassConnection:Disconnect()
-			_G.DroneBypassConnection = nil
-		end
-	end
-end)
 
 Groupboxes.Exploits_BypassRight = Tabs.Exploits:AddRightGroupbox("Bypass")
 Groupboxes.Exploits_BypassRight:AddToggle("DisableAnticheat", {
@@ -1494,6 +1460,7 @@ Groupboxes.Exploits_Remove:AddToggle("RemoveHalt",    { Text = "Remove Halt",   
 Groupboxes.Exploits_Remove:AddToggle("RemoveA90",     { Text = "Remove A-90",     Default = false, Tooltip = "Prevents 'A-90' from spawning." })
 Groupboxes.Exploits_Remove:AddToggle("RemoveDread",   { Text = "Remove Dread",    Default = false, Tooltip = "Prevents 'Dread' from spawning." })
 Groupboxes.Exploits_Remove:AddToggle("RemoveSurge", { Text = "Remove Surge", Default = false, Tooltip = "Prevents 'Surge' from spawning."})
+Groupboxes.Exploits_Remove:AddToggle("RemoveDrones", { Text = "Remove Drones", Default = false, Tooltip = "Completely removes all drones from the game." })
 Groupboxes.Exploits_Remove:AddDivider()
 Groupboxes.Exploits_Remove:AddToggle("NoScreechDamage", { Text = "No Screech Damage", Default = false, Tooltip = "Prevents 'Screech' from hurting you." })
 Groupboxes.Exploits_Remove:AddToggle("NoHaltDamage",    { Text = "No Halt Damage",    Default = false, Tooltip = "Prevents 'Halt' from hurting you." })
@@ -1539,6 +1506,19 @@ Toggles.NoSurgeDamage:OnChanged(function(Value)
 			FakeEvents.Surge.Parent = nil
 		end
 	end
+end)
+
+Toggles.RemoveDrones:OnChanged(function(Value)
+	task.spawn(function()
+		while Toggles.RemoveDrones.Value do
+			for _, Object in ipairs(Services.Workspace:GetDescendants()) do
+				if Object.Name == "Drone" or Object.Name == "Drones" then
+					Object:Destroy()
+				end
+			end
+			task.wait(0.5)
+		end
+	end)
 end)
 
 local Modules = {}
