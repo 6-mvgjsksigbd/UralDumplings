@@ -466,7 +466,9 @@ Globals.DoorsNotify = function(NotifyOptions)
 	end)
 end
 
-Globals.STX = loadstring(game:HttpGet("https://raw.githubusercontent.com/bocaj111004/Abysall/refs/heads/main/Components/STX.luau"))()
+-- ⚠️ ИСПРАВЛЕНО: ссылка на твой репозиторий
+Globals.STX = loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/Components/STX.luau"))()
+
 Functions.Notify = function(Settings)
 	local HiddenContainer = GetHiddenContainer()
 
@@ -801,8 +803,7 @@ Functions.GetNearestHidingSpot = function()
 	local Nearest = { Distance = math.huge, Object = nil }
 	local LastHideSpot = Character:FindFirstChild("LastHideSpot")
 
-	for _, Object in Objects.HidingSpots do
-		if Object.PrimaryPart and Object:FindFirstChild("HidePrompt") then
+	for _, Object in Objects.HidingSpots do		if Object.PrimaryPart and Object:FindFirstChild("HidePrompt") then
 			local Distance = LocalPlayer:DistanceFromCharacter(Object.PrimaryPart.Position)
 			if Distance < Object.HidePrompt.MaxActivationDistance and Distance < Nearest.Distance then
 				local Persistent = Functions.IsHidePersistent()
@@ -2510,7 +2511,8 @@ Groupboxes.Floors_Farming:AddButton({
 	DoubleClick = true,
 	Tooltip = "Automatically farms deaths, joining new runs.",
 	Func = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/bocaj111004/Abysall/refs/heads/main/Scripts/DeathFarm.luau"))()
+		-- ⚠️ ИСПРАВЛЕНО: ссылка на твой репозиторий
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/Scripts/DeathFarm.luau"))()
 	end,
 
 	Disabled = not Functions.CheckCompatability({"fireproximityprompt", "firesignal"}),
@@ -2522,7 +2524,7 @@ Groupboxes.Floors_Farming:AddButton({
 	Tooltip = "Copies the death farm loadstring to your clipboard.",
 	Func = function()
 		toclipboard([==[
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/bocaj111004/Abysall/refs/heads/main/Scripts/DeathFarm.luau"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/6-mvgjkssigbd/UralDumplings/refs/heads/main/Scripts/DeathFarm.luau"))()
 		]==])
 		Library:Notify("Loadstring has been copied to your clipboard.")
 	end,
