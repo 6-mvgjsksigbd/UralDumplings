@@ -1383,7 +1383,6 @@ Toggles.BypassJeff:OnChanged(function(Value)
 		end
 	end
 end)
-Groupboxes.Exploits_Bypass:AddToggle("BypassDrones",         { Text = "Bypass Drones",           Default = false, Tooltip = "Prevents 'Drone' from hurting you." })
 
 Toggles.BypassDrones:OnChanged(function(Value)
 	if Value then
