@@ -1261,18 +1261,18 @@ Groupboxes.Self_Misc:AddButton({
 })
 
 Groupboxes.Exploits_Bypass = Tabs.Exploits:AddLeftGroupbox("Bypass")
-Groupboxes.Exploits_Bypass:AddToggle("BypassGiggle",         { Text = "Bypass Giggle",          Default = false, Tooltip = "Prevents 'Giggle' from attacking you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassDupe",            { Text = "Bypass Dupe",              Default = false, Tooltip = "Prevents you from open 'Dupe' fake doors." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassEyes",            { Text = "Bypass Eyes",              Default = false, Tooltip = "Prevents 'Eyes' from hurting you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassLookman",         { Text = "Bypass Lookman",           Default = false, Tooltip = "Prevents 'Lookman' from hurting you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassGloombatEggs",   { Text = "Bypass Gloombat Eggs",     Default = false, Tooltip = "Prevents taking damage from stepping on 'Gloombat' eggs." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassGiggle",         { Text = "Bypass Giggle",           Default = false, Tooltip = "Prevents 'Giggle' from attacking you." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassDupe",           { Text = "Bypass Dupe",             Default = false, Tooltip = "Prevents you from open 'Dupe' fake doors." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassEyes",           { Text = "Bypass Eyes",             Default = false, Tooltip = "Prevents 'Eyes' from hurting you." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassLookman",        { Text = "Bypass Lookman",          Default = false, Tooltip = "Prevents 'Lookman' from hurting you." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassGloombatEggs",   { Text = "Bypass Gloombat Eggs",    Default = false, Tooltip = "Prevents taking damage from stepping on 'Gloombat' eggs." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassSeekObstructions", { Text = "Bypass Seek Obstructions", Default = false, Tooltip = "Prevents obstacles in the 'Seek' chase from harming you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassVacuum",         { Text = "Bypass Vacuum",            Default = false, Tooltip = "Prevents you from falling into 'Vacuum' fake doors." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassKillbricks",     { Text = "Bypass Killbricks",        Default = false, Tooltip = "Prevents 'Lava' from hurting you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassSeekingWall",    { Text = "Bypass Seeking Wall",      Default = false, Tooltip = "Prevents 'ScaryWall' from hurting you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassSnare",          { Text = "Bypass Snare",             Default = false, Tooltip = "Prevents 'Snare' from trapping you." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassBanana",         { Text = "Bypass Banana",            Default = false, Tooltip = "Prevents 'Banana Peel' from slipping you up (sometimes doesn't work)." })
-Groupboxes.Exploits_Bypass:AddToggle("BypassJeff",           { Text = "Bypass Jeff",              Default = false, Tooltip = "Prevents 'Jeff the Killer' from stabbing you (sometimes doesn't work)." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassVacuum",         { Text = "Bypass Vacuum",           Default = false, Tooltip = "Prevents you from falling into 'Vacuum' fake doors." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassKillbricks",     { Text = "Bypass Killbricks",       Default = false, Tooltip = "Prevents 'Lava' from hurting you." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassSeekingWall",    { Text = "Bypass Seeking Wall",     Default = false, Tooltip = "Prevents 'ScaryWall' from hurting you." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassSnare",          { Text = "Bypass Snare",            Default = false, Tooltip = "Prevents 'Snare' from trapping you." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassBanana",         { Text = "Bypass Banana",           Default = false, Tooltip = "Prevents 'Banana Peel' from slipping you up (sometimes doesn't work)." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassJeff",           { Text = "Bypass Jeff",             Default = false, Tooltip = "Prevents 'Jeff the Killer' from stabbing you (sometimes doesn't work)." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassDrones",         { Text = "Bypass Drones",           Default = false, Tooltip = "Prevents 'Drone' from hurting you." })
 
 Toggles.BypassGiggle:OnChanged(function(Value)
@@ -1457,7 +1457,7 @@ Toggles.PositionSpoof:OnChanged(function(Value)
 end)
 
 Toggles.PositionSpoof:AddKeyPicker("PositionSpoof", {
-	Text = "Position Spoof", Default = "B", Mode = "Always", SyncToggleState = true
+	Text = "Position Spoof", Default = "B", Mode = "Toggle", SyncToggleState = true
 })
 
 Toggles.CrouchSpoof:OnChanged(function(Value)
@@ -1465,7 +1465,6 @@ Toggles.CrouchSpoof:OnChanged(function(Value)
 		RemotesFolder.Crouch:FireServer(Value and true or Functions.IsCrouching(), true)
 	end
 end)
-
 Groupboxes.Exploits_Remove = Tabs.Exploits:AddRightGroupbox("Remove")
 Groupboxes.Exploits_Remove:AddToggle("RemoveScreech", { Text = "Remove Screech",  Default = false, Tooltip = "Prevents 'Screech' from spawning." })
 Groupboxes.Exploits_Remove:AddToggle("RemoveHalt",    { Text = "Remove Halt",     Default = false, Tooltip = "Prevents 'Halt' from spawning." })
