@@ -2126,25 +2126,27 @@ Groupboxes.Floors_Automation:AddSlider("AutoSteerMinecartDuckDistance", {
 	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
 })
 Groupboxes.Floors_Automation:AddDivider()
--- ========== AUTO ARCHIVES (телепорт в центр комнаты) ==========
+-- ========== AUTO ARCHIVES ==========
 Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 	Text = "Auto Archives",
 	Default = false,
-	Tooltip = "Teleports you to the center of each room from current to 50."
+	Tooltip = "Teleports you in front of each door from current room to 50 every 0.75 seconds."
 })
 
 Toggles.AutoArchives:OnChanged(function(Value)
 	task.spawn(function()
+		if not Value then return end
+		
 		local CurrentRoomNumber = 0
 		
 		while Toggles.AutoArchives.Value do
-			-- Берём текущую комнату игрока
+			-- Определяем текущую комнату
 			if CurrentRoomNumber == 0 then
 				local PlayerRoom = tonumber(LocalPlayer:GetAttribute("CurrentRoom")) or 0
 				if PlayerRoom > 0 then
 					CurrentRoomNumber = PlayerRoom
 				else
-					-- Если не удалось получить комнату, пробуем найти первую доступную
+					-- Если не удалось получить комнату, ищем первую доступную
 					for RoomNumber = 1, 50 do
 						if CurrentRooms:FindFirstChild(tostring(RoomNumber)) then
 							CurrentRoomNumber = RoomNumber
@@ -2155,52 +2157,56 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			end
 			
 			local NextRoomNumber = CurrentRoomNumber + 1
-			local Room = nil
-			local Attempts = 0
-			local MaxAttempts = 40 -- 10 секунд
+			if NextRoomNumber > 50 then
+				Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives."})
+				Toggles.AutoArchives:SetValue(false)
+				break
+			end
 			
-			-- Ждём появления следующей комнаты
-			while not Room and Toggles.AutoArchives.Value and Attempts < MaxAttempts do
-				Room = CurrentRooms:FindFirstChild(tostring(NextRoomNumber))
+			-- Ищем следующую комнату и дверь
+			local Room = CurrentRooms:FindFirstChild(tostring(NextRoomNumber))
+			local Door = nil
+			local Attempts = 0
+			local MaxAttempts = 40 -- 40 * 0.75 = 30 секунд максимум
+			
+			while not Door and Toggles.AutoArchives.Value and Attempts < MaxAttempts do
 				if not Room then
+					Room = CurrentRooms:FindFirstChild(tostring(NextRoomNumber))
+				end
+				
+				if Room then
+					Door = Room:FindFirstChild("Door")
+					if not Door then
+						Door = Room:FindFirstChild("Door", true)
+					end
+				end
+				
+				if not Door then
 					Attempts = Attempts + 1
-					task.wait(0.25)
+					task.wait(0.75)
 				end
 			end
 			
-			if Room then
-				-- Находим центр комнаты (HumanoidRootPart или любую часть)
-				local TargetPart = Room:FindFirstChild("HumanoidRootPart")
-				if not TargetPart then
-					TargetPart = Room:FindFirstChildOfClass("BasePart")
-				end
+			if Door then
+				-- Телепортируемся перед дверью (3 студа)
+				local DoorCFrame = Door.CFrame
+				local TeleportPosition = DoorCFrame * CFrame.new(0, 0, 3) -- 3 студа перед дверью
 				
-				if TargetPart then
-					-- Телепортируемся в центр комнаты (чуть выше пола)
-					local TeleportPosition = TargetPart.Position + Vector3.new(0, 3, 0)
-					
-					pcall(function()
-						Character:PivotTo(CFrame.new(TeleportPosition))
-					end)
-					
-					CurrentRoomNumber = NextRoomNumber
-					LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
-					
-					-- Уведомление о прогрессе (каждые 5 комнат)
-					if CurrentRoomNumber % 5 == 0 then
-						Functions.Notify({Title = "Auto Archives", Body = "Room " .. CurrentRoomNumber .. "/50"})
-					end
-				else
-					-- Если в комнате нет частей — пропускаем
-					CurrentRoomNumber = NextRoomNumber
-				end
+				pcall(function()
+					Character:PivotTo(TeleportPosition)
+				end)
 				
-				task.wait(0.15)
+				CurrentRoomNumber = NextRoomNumber
+				LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
+				
+				-- Уведомление каждые 5 комнат
+				if CurrentRoomNumber % 5 == 0 then
+					Functions.Notify({Title = "Auto Archives", Body = "Room " .. CurrentRoomNumber .. "/50"})
+				end
 			else
-				-- Если следующая комната не появилась за 10 секунд
-				-- Проверяем, есть ли вообще какие-то комнаты после текущей
+				-- Если дверь не найдена, проверяем, есть ли комнаты дальше
 				local FoundAny = false
-				for RoomNumber = CurrentRoomNumber + 1, 50 do
+				for RoomNumber = NextRoomNumber + 1, 50 do
 					if CurrentRooms:FindFirstChild(tostring(RoomNumber)) then
 						FoundAny = true
 						break
@@ -2209,15 +2215,17 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				
 				if not FoundAny then
 					if Toggles.AutoArchives.Value then
-						Functions.Notify({Title = "Auto Archives finished!", Body = "Reached room " .. CurrentRoomNumber})
+						Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives."})
 						Toggles.AutoArchives:SetValue(false)
 					end
 					break
 				else
-					-- Комнаты есть, но не загрузились — ждём
-					task.wait(0.25)
+					-- Если комнаты есть, но дверь не загрузилась, ждём и пробуем снова
+					task.wait(0.75)
 				end
 			end
+			
+			task.wait(0.75)
 		end
 		
 		CurrentRoomNumber = 0
