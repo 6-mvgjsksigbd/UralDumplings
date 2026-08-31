@@ -1384,13 +1384,36 @@ Toggles.BypassJeff:OnChanged(function(Value)
 	end
 end)
 Toggles.BypassDrones:OnChanged(function(Value)
-	for _, Object in Objects.Entities do
-		if Object.Name == "Drone" or Object.Name == "Drones" then
-			for _, Part in Object:GetDescendants() do
-				if Part:IsA("BasePart") and Part.Name == "WalkedInto" then
-					Part.CanTouch = not Value
+	if Value then
+		-- Функция для обработки конкретного объекта
+		local function processDrone(object)
+			if object.Name == "Drone" or object.Name == "Drones" then
+				local walkedInto = object:FindFirstChild("WalkedInto", true)
+				if walkedInto and walkedInto:IsA("BasePart") then
+					walkedInto:Destroy() -- или walkedInto.CanTouch = false
 				end
 			end
+		end
+
+		-- Проверяем уже существующие объекты
+		for _, obj in pairs(Objects.Entities) do
+			processDrone(obj)
+		end
+		for _, obj in pairs(workspace:GetDescendants()) do
+			processDrone(obj)
+		end
+
+		-- Подписываемся на появление новых объектов на лету
+		_G.DroneBypassConnection = workspace.DescendantAdded:Connect(function(child)
+			if Toggles.BypassDrones.Value then
+				processDrone(child)
+			end
+		end)
+	else
+		-- Отключаем мониторинг при выключении тоггла
+		if _G.DroneBypassConnection then
+			_G.DroneBypassConnection:Disconnect()
+			_G.DroneBypassConnection = nil
 		end
 	end
 end)
