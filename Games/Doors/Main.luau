@@ -4153,9 +4153,8 @@ local AutoInteractBlacklist = {
 	HidePrompt=true, RiftPrompt=true, StarRiftPrompt=true, InteractPrompt=true, ClimbPrompt=true,
 	DonatePrompt=true, DialoguePrompt=true, RevivePrompt=true, EnterPrompt=true, AnimatePrompt=true,
 	ToolEventPrompt=true, Prompt=true, PropPrompt=true, SeatPrompt=true, CartPrompt=true, VendorPrompt=true,
-	PushPrompt=true, LongPushPrompt=true, BigPropPrompt=true, ActivateEventPrompt=true,
-	UnlockPrompt=true, SkullPrompt=true, LockPrompt=true, ThingToEnable=true, FusesPrompt=true,
-	ModulePrompt=true, HerbPrompt=true, ValvePrompt=true, HidePrompt=true, ClosetPrompt=true
+	PushPrompt=true, LongPushPrompt=true, BigPropPrompt=true,
+	ModulePrompt=true, HerbPrompt=true
 }
 
 local TriggerDebounce = false
