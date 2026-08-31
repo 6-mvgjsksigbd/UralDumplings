@@ -2126,7 +2126,7 @@ Groupboxes.Floors_Automation:AddSlider("AutoSteerMinecartDuckDistance", {
 	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
 })
 Groupboxes.Floors_Automation:AddDivider()
--- ========== AUTO ARCHIVES (как Auto Rooms) ==========
+-- ========== AUTO ARCHIVES (летит по пути) ==========
 Functions.AutoArchives = {}
 Functions.AutoArchives.Active = false
 
@@ -2146,64 +2146,48 @@ Functions.AutoArchives.GetNextDoor = function(CurrentRoomNumber)
 	return nil, nil
 end
 
-Functions.AutoArchives.WalkToDoor = function(Door)
-	if not Door or not Character or not Humanoid or not RootPart then
+Functions.AutoArchives.FlyToDoor = function(Door)
+	if not Door or not Character or not RootPart then
 		return false
 	end
 	
-	local Path = Services.PathfindingService:CreatePath({
-		AgentCanJump = true,
-		AgentCanClimb = false,
-		WaypointSpacing = 3,
-		AgentRadius = 2,
-		AgentHeight = 5,
-		Costs = {
-			StuckPart = 8,
-		}
-	})
+	local TargetPosition = Door.Position + Vector3.new(0, 0, -3) -- Перед дверью
 	
-	local TargetPosition = Door.Position + Vector3.new(0, 0, 0)
+	-- Создаём тело для полёта
+	local BodyVelocity = Instance.new("BodyVelocity")
+	BodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+	BodyVelocity.Parent = RootPart
 	
-	local Success, Error = pcall(function()
-		Path:ComputeAsync(RootPart.Position, TargetPosition)
-	end)
+	local StartTime = tick()
+	local Timeout = 10 -- 10 секунд на полёт
 	
-	if not Success or Path.Status ~= Enum.PathStatus.Success then
-		return false
-	end
-	
-	local Waypoints = Path:GetWaypoints()
-	
-	for _, Waypoint in ipairs(Waypoints) do
-		if not Toggles.AutoArchives.Value then
+	while Toggles.AutoArchives.Value and tick() - StartTime < Timeout do
+		local Direction = (TargetPosition - RootPart.Position)
+		local Distance = Direction.Magnitude
+		
+		if Distance < 3 then
+			-- Долетели до цели
 			break
 		end
 		
-		Humanoid:MoveTo(Waypoint.Position)
+		-- Летим к цели со скоростью 20
+		BodyVelocity.Velocity = Direction.Unit * 20
 		
-		local StartTime = tick()
-		local Timeout = 3
-		
-		while Toggles.AutoArchives.Value do
-			local Distance = (RootPart.Position - Waypoint.Position).Magnitude
-			if Distance < 4 then
-				break
-			end
-			if tick() - StartTime > Timeout then
-				break
-			end
-			task.wait(0.1)
-		end
+		task.wait(0.05)
 	end
 	
-	return true
+	BodyVelocity:Destroy()
+	
+	-- Проверяем, долетели ли
+	local FinalDistance = (RootPart.Position - TargetPosition).Magnitude
+	return FinalDistance < 5
 end
 
 -- Тоггл для Auto Archives
 Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 	Text = "Auto Archives",
 	Default = false,
-	Tooltip = "Walks to each door from current room to 50 with obstacle avoidance."
+	Tooltip = "Flies to each door from current room to 50."
 })
 
 Toggles.AutoArchives:OnChanged(function(Value)
@@ -2238,22 +2222,22 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			end
 			
 			if NextDoor then
-				-- Идём к двери
-				local Walked = Functions.AutoArchives.WalkToDoor(NextDoor)
+				-- Летим к двери
+				local Flown = Functions.AutoArchives.FlyToDoor(NextDoor)
 				
-				if Walked then
+				if Flown then
 					CurrentRoomNumber = NextRoomNumber + 1
 					LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
 				else
-					-- Если не удалось дойти — телепортируемся
+					-- Если не долетели — телепортируемся
 					pcall(function()
-						Character:PivotTo(NextDoor.CFrame * CFrame.new(0, 0, -5))
+						Character:PivotTo(NextDoor.CFrame * CFrame.new(0, 0, -3))
 					end)
 					CurrentRoomNumber = NextRoomNumber + 1
 					LocalPlayer:SetAttribute("CurrentRoom", NextRoomNumber)
 				end
 				
-				task.wait(0.25)
+				task.wait(0.1)
 			else
 				-- Если дверь не найдена за 10 секунд — проверяем, есть ли комнаты дальше
 				local FoundAnyRoom = false
