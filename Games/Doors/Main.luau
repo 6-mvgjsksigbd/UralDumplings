@@ -1273,6 +1273,7 @@ Groupboxes.Exploits_Bypass:AddToggle("BypassSeekingWall",    { Text = "Bypass Se
 Groupboxes.Exploits_Bypass:AddToggle("BypassSnare",          { Text = "Bypass Snare",             Default = false, Tooltip = "Prevents 'Snare' from trapping you." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassBanana",         { Text = "Bypass Banana",            Default = false, Tooltip = "Prevents 'Banana Peel' from slipping you up (sometimes doesn't work)." })
 Groupboxes.Exploits_Bypass:AddToggle("BypassJeff",           { Text = "Bypass Jeff",              Default = false, Tooltip = "Prevents 'Jeff the Killer' from stabbing you (sometimes doesn't work)." })
+Groupboxes.Exploits_Bypass:AddToggle("BypassDrones",         { Text = "Bypass Drones",           Default = false, Tooltip = "Prevents 'Drone' from hurting you." })
 
 Toggles.BypassGiggle:OnChanged(function(Value)
 	for _, Object in Objects.Entities do
@@ -1382,6 +1383,17 @@ Toggles.BypassJeff:OnChanged(function(Value)
 		end
 	end
 end)
+Toggles.BypassDrones:OnChanged(function(Value)
+	for _, Object in Objects.Entities do
+		if Object.Name == "Drone" or Object.Name == "Drones" then
+			for _, Part in Object:GetDescendants() do
+				if Part:IsA("BasePart") and Part.Name == "WalkedInto" then
+					Part.CanTouch = not Value
+				end
+			end
+		end
+	end
+end)
 
 Groupboxes.Exploits_BypassRight = Tabs.Exploits:AddRightGroupbox("Bypass")
 Groupboxes.Exploits_BypassRight:AddToggle("DisableAnticheat", {
@@ -1460,7 +1472,6 @@ Groupboxes.Exploits_Remove:AddToggle("RemoveHalt",    { Text = "Remove Halt",   
 Groupboxes.Exploits_Remove:AddToggle("RemoveA90",     { Text = "Remove A-90",     Default = false, Tooltip = "Prevents 'A-90' from spawning." })
 Groupboxes.Exploits_Remove:AddToggle("RemoveDread",   { Text = "Remove Dread",    Default = false, Tooltip = "Prevents 'Dread' from spawning." })
 Groupboxes.Exploits_Remove:AddToggle("RemoveSurge", { Text = "Remove Surge", Default = false, Tooltip = "Prevents 'Surge' from spawning."})
-Groupboxes.Exploits_Remove:AddToggle("RemoveDrones", { Text = "Remove Drones", Default = false, Tooltip = "Completely removes all drones from the game." })
 Groupboxes.Exploits_Remove:AddDivider()
 Groupboxes.Exploits_Remove:AddToggle("NoScreechDamage", { Text = "No Screech Damage", Default = false, Tooltip = "Prevents 'Screech' from hurting you." })
 Groupboxes.Exploits_Remove:AddToggle("NoHaltDamage",    { Text = "No Halt Damage",    Default = false, Tooltip = "Prevents 'Halt' from hurting you." })
@@ -1504,32 +1515,6 @@ Toggles.NoSurgeDamage:OnChanged(function(Value)
 		else
 			FakeEvents.Surge_Real.Parent = RemotesFolder
 			FakeEvents.Surge.Parent = nil
-		end
-	end
-end)
-
-Toggles.RemoveDrones:OnChanged(function(Value)
-	-- Находим модуль дронов (как в RemoveSurge)
-	if not Modules.Drone and ClientModules and ClientModules.EntityModules then
-		for _, Module in pairs(ClientModules.EntityModules:GetChildren()) do
-			if Module.Name == "Drones" then
-				Modules.Drone = Module
-				break
-			end
-		end
-	end
-
-	-- Переименовываем модуль (как в RemoveSurge)
-	if Modules.Drone then
-		Modules.Drone.Name = Value and "Drones_Disabled" or "Drones"
-	end
-
-	-- Удаляем уже существующих дронов (один раз, без цикла)
-	if Value then
-		for _, Object in ipairs(Services.Workspace:GetDescendants()) do
-			if Object.Name == "Drone" or Object.Name == "Drones" then
-				Object:Destroy()
-			end
 		end
 	end
 end)
@@ -1580,6 +1565,20 @@ Toggles.RemoveInteractingSounds:OnChanged(function(Value)
 	PS.Notification.Volume = Value and 0 or 0.03
 	Globals.MainUI.Initiator.Main_Game.Reminder.Caption.Volume = Value and 0 or 0.1
 end)
+
+Groupboxes.Visuals_LeftTab = Tabs.Visuals:AddLeftTabbox("Camera / Effects")
+Groupboxes.Visuals_Camera = Groupboxes.Visuals_LeftTab:AddTab("Camera")
+Groupboxes.Visuals_Camera:AddToggle("AmbientToggle", { Text = "Ambient", Default = false, Tooltip = "Changes the lighting color to the specified value." })
+Groupboxes.Visuals_Camera:AddSlider("FieldOfView", { Text = "Field of View", Min = 1, Max = 120, Default = 70, Rounding = 0 })
+Groupboxes.Visuals_Camera:AddDivider()
+Groupboxes.Visuals_Camera:AddToggle("RemoveCameraShake", {
+	Text = "Remove Camera Shake", Default = false, Tooltip = "Prevents the camera from shaking.",
+	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
+})
+Groupboxes.Visuals_Camera:AddToggle("RemoveCameraBobbing", {
+	Text = "Remove Camera Bobbing", Default = false, Tooltip = "Prevents the camera from bobbing when moving.",
+	Disabled = not Functions.CheckCompatability({"require"}), DisabledTooltip = Globals.IncompatibleMessage
+})
 
 Groupboxes.Visuals_LeftTab = Tabs.Visuals:AddLeftTabbox("Camera / Effects")
 Groupboxes.Visuals_Camera = Groupboxes.Visuals_LeftTab:AddTab("Camera")
