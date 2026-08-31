@@ -1508,19 +1508,51 @@ Toggles.NoSurgeDamage:OnChanged(function(Value)
 	end
 end)
 
+-- Добавь это в блок Modules (вместе с другими модулями)
+Modules.Drone = nil
+
 Toggles.RemoveDrones:OnChanged(function(Value)
-	task.spawn(function()
-		while Toggles.RemoveDrones.Value do
-			for _, Object in ipairs(Services.Workspace:GetDescendants()) do
-				if Object.Name == "Drone" or Object.Name == "Drones" then
-					Object:Destroy()
+	if Value then
+		-- Отключаем модули дронов, если они уже загружены
+		if ClientModules and ClientModules.EntityModules then
+			for _, Module in pairs(ClientModules.EntityModules:GetChildren()) do
+				if Module.Name == "Drone" or Module.Name == "Drones" then
+					Module.Name = Module.Name .. "_Disabled"
+					Modules.Drone = Module
 				end
 			end
-			task.wait(0.5)
 		end
-	end)
+		
+		-- Удаляем уже существующих дронов (один раз)
+		for _, Object in ipairs(Services.Workspace:GetDescendants()) do
+			if Object.Name == "Drone" or Object.Name == "Drones" then
+				Object:Destroy()
+			end
+		end
+		
+		-- Следим за новыми дронами через ChildAdded (без постоянного цикла)
+		if not _G.DroneRemoveConnection then
+			_G.DroneRemoveConnection = Services.Workspace.DescendantAdded:Connect(function(Object)
+				if Toggles.RemoveDrones.Value then
+					if Object.Name == "Drone" or Object.Name == "Drones" then
+						Object:Destroy()
+					end
+				end
+			end)
+		end
+	else
+		-- Восстанавливаем модули при выключении
+		if Modules.Drone then
+			Modules.Drone.Name = string.gsub(Modules.Drone.Name, "_Disabled", "")
+			Modules.Drone = nil
+		end
+		
+		if _G.DroneRemoveConnection then
+			_G.DroneRemoveConnection:Disconnect()
+			_G.DroneRemoveConnection = nil
+		end
+	end
 end)
-
 local Modules = {}
 
 Toggles.RemoveScreech:OnChanged(function(Value)
