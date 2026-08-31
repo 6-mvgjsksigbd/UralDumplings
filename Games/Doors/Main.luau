@@ -2138,22 +2138,30 @@ Toggles.AutoArchives:OnChanged(function(Value)
 		local CurrentRoomNumber = 0
 		
 		while Toggles.AutoArchives.Value do
-			-- Ищем следующую дверь
 			local NextDoor = nil
 			local NextRoomNumber = nil
+			local Attempts = 0
 			
-			for RoomNumber = CurrentRoomNumber + 1, 50 do
-				local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
-				if Room then
-					local Door = Room:FindFirstChild("Door")
-					if not Door then
-						Door = Room:FindFirstChild("Door", true)
+			-- Ищем следующую дверь с ожиданием до 10 секунд
+			while not NextDoor and Attempts < 40 do -- 40 * 0.25 = 10 секунд
+				for RoomNumber = CurrentRoomNumber + 1, 50 do
+					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
+					if Room then
+						local Door = Room:FindFirstChild("Door")
+						if not Door then
+							Door = Room:FindFirstChild("Door", true)
+						end
+						if Door then
+							NextDoor = Door
+							NextRoomNumber = RoomNumber
+							break
+						end
 					end
-					if Door then
-						NextDoor = Door
-						NextRoomNumber = RoomNumber
-						break
-					end
+				end
+				
+				if not NextDoor then
+					Attempts = Attempts + 1
+					task.wait(0.25)
 				end
 			end
 			
@@ -2165,7 +2173,7 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				task.wait(0.25)
 			else
 				if Toggles.AutoArchives.Value then
-					Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives."})
+					Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives or timed out."})
 					Toggles.AutoArchives:SetValue(false)
 				end
 				break
