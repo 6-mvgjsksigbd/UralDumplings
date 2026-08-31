@@ -1383,14 +1383,42 @@ Toggles.BypassJeff:OnChanged(function(Value)
 		end
 	end
 end)
+Groupboxes.Exploits_Bypass:AddToggle("BypassDrones",         { Text = "Bypass Drones",           Default = false, Tooltip = "Prevents 'Drone' from hurting you." })
+
 Toggles.BypassDrones:OnChanged(function(Value)
-	for _, Object in Objects.Entities do
-		if Object.Name == "Drone" or Object.Name == "Drones" then
-			for _, Part in Object:GetDescendants() do
-				if Part:IsA("BasePart") and Part.Name == "WalkedInto" then
-					Part.CanTouch = not Value
+	if Value then
+		-- Удаляем WalkedInto у всех существующих дронов
+		for _, Object in ipairs(Services.Workspace:GetDescendants()) do
+			if Object.Name == "Drone" or Object.Name == "Drones" then
+				for _, Child in Object:GetDescendants() do
+					if Child.Name == "WalkedInto" and Child:IsA("BasePart") then
+						Child:Destroy()
+					end
 				end
 			end
+		end
+		
+		-- Следим за новыми дронами через DescendantAdded (без циклов)
+		if not _G.DroneBypassConnection then
+			_G.DroneBypassConnection = Services.Workspace.DescendantAdded:Connect(function(Object)
+				if Toggles.BypassDrones.Value then
+					if Object.Name == "WalkedInto" then
+						Object:Destroy()
+					elseif Object.Name == "Drone" or Object.Name == "Drones" then
+						task.wait(0.1)
+						for _, Child in Object:GetDescendants() do
+							if Child.Name == "WalkedInto" and Child:IsA("BasePart") then
+								Child:Destroy()
+							end
+						end
+					end
+				end
+			end)
+		end
+	else
+		if _G.DroneBypassConnection then
+			_G.DroneBypassConnection:Disconnect()
+			_G.DroneBypassConnection = nil
 		end
 	end
 end)
