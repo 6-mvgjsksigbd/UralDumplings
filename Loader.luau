@@ -1,6 +1,7 @@
 if Abysall then
     return 
 end
+
 getgenv().Abysall = {
     Legit = true
 }
@@ -9,14 +10,13 @@ local GameList = {
   [2440500124] = "Doors"
 }
 
--- ABYSSAL ZOV EDITION
 local BaseUrl = "https://raw.githubusercontent.com/6-mvgjsksigbd/UralDumplings/refs/heads/main/"
 
 getgenv().Abysall = {
     Environment = loadstring(game:HttpGet(BaseUrl .. "Components/Environment.luau"))(),
     ESPLibrary = loadstring(game:HttpGet(BaseUrl .. "Components/ESP.luau"))(),
 
-    Legit = true, -- pog
+    Legit = true,
 }
 
 local function CloneReference(Object)
