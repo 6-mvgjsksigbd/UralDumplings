@@ -1385,32 +1385,31 @@ Toggles.BypassJeff:OnChanged(function(Value)
 end)
 Toggles.BypassDrones:OnChanged(function(Value)
 	if Value then
-		-- Функция для обработки конкретного объекта
-		local function processDrone(object)
-			if object.Name == "Drone" or object.Name == "Drones" then
-				local walkedInto = object:FindFirstChild("WalkedInto", true)
-				if walkedInto and walkedInto:IsA("BasePart") then
-					walkedInto:Destroy() -- или walkedInto.CanTouch = false
-				end
+		local function killWalkedInto(parent)
+			local walkedInto = parent:FindFirstChild("WalkedInto")
+			if walkedInto then
+				walkedInto:Destroy()
 			end
 		end
 
-		-- Проверяем уже существующие объекты
-		for _, obj in pairs(Objects.Entities) do
-			processDrone(obj)
-		end
-		for _, obj in pairs(workspace:GetDescendants()) do
-			processDrone(obj)
+		-- Обрабатываем всё, что уже есть в памяти
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			if obj.Name == "Drones" or obj.Name == "Drone" then
+				killWalkedInto(obj)
+			end
 		end
 
-		-- Подписываемся на появление новых объектов на лету
+		-- Следим за появлением абсолютно каждого нового элемента в игре в реальном времени
 		_G.DroneBypassConnection = workspace.DescendantAdded:Connect(function(child)
 			if Toggles.BypassDrones.Value then
-				processDrone(child)
+				if child.Name == "WalkedInto" then
+					child:Destroy()
+				elseif child.Name == "Drones" or child.Name == "Drone" then
+					killWalkedInto(child)
+				end
 			end
 		end)
 	else
-		-- Отключаем мониторинг при выключении тоггла
 		if _G.DroneBypassConnection then
 			_G.DroneBypassConnection:Disconnect()
 			_G.DroneBypassConnection = nil
