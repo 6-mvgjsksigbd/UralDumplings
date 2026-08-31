@@ -2141,9 +2141,10 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			local NextDoor = nil
 			local NextRoomNumber = nil
 			local Attempts = 0
+			local MaxAttempts = 40 -- 40 * 0.25 = 10 секунд
 			
 			-- Ищем следующую дверь с ожиданием до 10 секунд
-			while not NextDoor and Attempts < 40 do -- 40 * 0.25 = 10 секунд
+			while not NextDoor and Attempts < MaxAttempts do
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
 					if Room then
@@ -2172,11 +2173,47 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
 				task.wait(0.25)
 			else
+				-- Если дверь не найдена за 10 секунд — пробуем снова с той же комнаты
 				if Toggles.AutoArchives.Value then
-					Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives or timed out."})
-					Toggles.AutoArchives:SetValue(false)
+					Functions.Notify({Title = "Waiting for room " .. (CurrentRoomNumber + 1) .. "...", Body = "Room not loaded yet."})
+					-- Сбрасываем попытки и ждём ещё 10 секунд
+					Attempts = 0
+					while not NextDoor and Attempts < MaxAttempts do
+						for RoomNumber = CurrentRoomNumber + 1, 50 do
+							local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
+							if Room then
+								local Door = Room:FindFirstChild("Door")
+								if not Door then
+									Door = Room:FindFirstChild("Door", true)
+								end
+								if Door then
+									NextDoor = Door
+									NextRoomNumber = RoomNumber
+									break
+								end
+							end
+						end
+						
+						if not NextDoor then
+							Attempts = Attempts + 1
+							task.wait(0.25)
+						end
+					end
+					
+					if NextDoor then
+						Character:PivotTo(NextDoor:GetPivot())
+						CurrentRoomNumber = NextRoomNumber
+						LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
+						task.wait(0.25)
+					else
+						-- Если за 20 секунд ничего не нашлось — завершаем
+						if Toggles.AutoArchives.Value then
+							Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives or rooms not loading."})
+							Toggles.AutoArchives:SetValue(false)
+						end
+						break
+					end
 				end
-				break
 			end
 		end
 		
