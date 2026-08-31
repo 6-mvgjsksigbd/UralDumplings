@@ -2130,12 +2130,12 @@ Groupboxes.Floors_Automation:AddDivider()
 Groupboxes.Floors_Automation:AddToggle("AutoArchives", {
 	Text = "Auto Archives",
 	Default = false,
-	Tooltip = "Teleports you through each door from 1 to 50 every 0.25 seconds."
+	Tooltip = "Teleports you through each door from current room to 50 every 0.25 seconds."
 })
 
 Toggles.AutoArchives:OnChanged(function(Value)
 	task.spawn(function()
-		local CurrentRoomNumber = 0
+		local CurrentRoomNumber = tonumber(LocalPlayer:GetAttribute("CurrentRoom")) or 0
 		
 		while Toggles.AutoArchives.Value do
 			local NextDoor = nil
@@ -2143,8 +2143,25 @@ Toggles.AutoArchives:OnChanged(function(Value)
 			local Attempts = 0
 			local MaxAttempts = 40 -- 40 * 0.25 = 10 секунд
 			
-			-- Ищем следующую дверь с ожиданием до 10 секунд
-			while not NextDoor and Attempts < MaxAttempts do
+			-- Проверяем, есть ли уже следующая комната
+			for RoomNumber = CurrentRoomNumber + 1, 50 do
+				local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
+				if Room then
+					local Door = Room:FindFirstChild("Door")
+					if not Door then
+						Door = Room:FindFirstChild("Door", true)
+					end
+					if Door then
+						NextDoor = Door
+						NextRoomNumber = RoomNumber
+						break
+					end
+				end
+			end
+			
+			-- Если дверь не найдена сразу — ждём её появления
+			while not NextDoor and Toggles.AutoArchives.Value and Attempts < MaxAttempts do
+				-- Проверяем снова все комнаты после текущей
 				for RoomNumber = CurrentRoomNumber + 1, 50 do
 					local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
 					if Room then
@@ -2173,45 +2190,27 @@ Toggles.AutoArchives:OnChanged(function(Value)
 				LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
 				task.wait(0.25)
 			else
-				-- Если дверь не найдена за 10 секунд — пробуем снова с той же комнаты
-				if Toggles.AutoArchives.Value then
-					Functions.Notify({Title = "Waiting for room " .. (CurrentRoomNumber + 1) .. "...", Body = "Room not loaded yet."})
-					-- Сбрасываем попытки и ждём ещё 10 секунд
-					Attempts = 0
-					while not NextDoor and Attempts < MaxAttempts do
-						for RoomNumber = CurrentRoomNumber + 1, 50 do
-							local Room = CurrentRooms:FindFirstChild(tostring(RoomNumber))
-							if Room then
-								local Door = Room:FindFirstChild("Door")
-								if not Door then
-									Door = Room:FindFirstChild("Door", true)
-								end
-								if Door then
-									NextDoor = Door
-									NextRoomNumber = RoomNumber
-									break
-								end
-							end
-						end
-						
-						if not NextDoor then
-							Attempts = Attempts + 1
-							task.wait(0.25)
-						end
-					end
-					
-					if NextDoor then
-						Character:PivotTo(NextDoor:GetPivot())
-						CurrentRoomNumber = NextRoomNumber
-						LocalPlayer:SetAttribute("CurrentRoom", CurrentRoomNumber)
-						task.wait(0.25)
-					else
-						-- Если за 20 секунд ничего не нашлось — завершаем
-						if Toggles.AutoArchives.Value then
-							Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives or rooms not loading."})
-							Toggles.AutoArchives:SetValue(false)
-						end
+				-- Если дверь не найдена за 10 секунд — проверяем, может, мы уже в конце
+				local FoundAnyRoom = false
+				for RoomNumber = CurrentRoomNumber + 1, 50 do
+					if CurrentRooms:FindFirstChild(tostring(RoomNumber)) then
+						FoundAnyRoom = true
 						break
+					end
+				end
+				
+				if not FoundAnyRoom then
+					-- Если комнат после текущей нет — завершаем
+					if Toggles.AutoArchives.Value then
+						Functions.Notify({Title = "Auto Archives finished!", Body = "Reached the end of Archives."})
+						Toggles.AutoArchives:SetValue(false)
+					end
+					break
+				else
+					-- Если комнаты есть, но двери нет — ждём дальше (ещё 5 секунд)
+					if Toggles.AutoArchives.Value then
+						Functions.Notify({Title = "Waiting for door...", Body = "Room " .. (CurrentRoomNumber + 1) .. " not loaded yet."})
+						task.wait(5)
 					end
 				end
 			end
